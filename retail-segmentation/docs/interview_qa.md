@@ -45,9 +45,10 @@ on the same answer gives me confidence."
 
 "SHAP stands for SHapley Additive exPlanations. It comes from cooperative
 game theory and assigns each feature a contribution to a specific
-prediction. For my WTP model, it told me that avg_order_value was the
-top driver (SHAP=0.34), meaning customers who spend more per order are
-predicted to have higher willingness-to-pay. I used it because it gives
+prediction. For my WTP model, the top drivers were monetary, recency_days and
+avg_order_value. Since the proxy target is built from some of those
+inputs, I used SHAP as a sanity check that the model learned the
+intended relationships rather than as a new finding. I used it because it gives
 per-customer, per-feature explanations — not just a global feature
 importance — and because it passes the consistency test: if a feature's
 effect increases, its SHAP value increases."
@@ -70,8 +71,11 @@ assumption clearly."
 ## "How did you validate your clusters?"
 
 "I used three metrics. Silhouette score measures how similar each point
-is to its own cluster vs other clusters — GMM scored 0.68, which is
-strong. Davies-Bouldin index measures cluster compactness and separation —
+is to its own cluster vs other clusters — KMeans scored 0.43 and GMM 0.20.
+GMM's lower score is expected: RFM features overlap heavily and
+silhouette rewards hard, well-separated clusters, while I picked GMM for
+its soft probabilities. I also caught that k=4 left one segment with only
+3 customers, which tells me k=3 is the more honest choice. Davies-Bouldin index measures cluster compactness and separation —
 lower is better. And for GMM specifically, BIC gives a model-level
 measure of fit penalised for complexity. I also did a sanity check:
 Champions had the highest average spend, lowest recency, and highest
