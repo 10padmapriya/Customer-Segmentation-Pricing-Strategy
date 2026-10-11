@@ -3,7 +3,7 @@ import urllib.request
 import zipfile
 import pandas as pd
 
-def download_raw_data(out_path: str = "../data/raw_retail.csv") -> pd.DataFrame:
+def download_raw_data(out_path: str = "data/raw_retail.csv") -> pd.DataFrame:
     out_path = Path(out_path)
     out_path.parent.mkdir(exist_ok=True)
 

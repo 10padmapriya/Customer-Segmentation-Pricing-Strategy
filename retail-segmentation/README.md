@@ -11,11 +11,15 @@
 |---|---|
 | Dataset | UCI Online Retail II — 1,067,371 real transactions |
 | Date range | Dec 2009 – Dec 2011 |
-| Customers after cleaning | ~4,300 unique |
+| Rows after cleaning | 776,872 |
+| Customers after cleaning | 5,862 unique |
+| Revenue covered | £17.1M |
 | Segments identified | 4 (GMM, best BIC) |
-| GMM silhouette score | 0.68 |
-| WTP model R² | 0.79 |
-| High-risk churn flagged | ~17% of customer base |
+| Clustering silhouette | KMeans 0.43 · DBSCAN 0.59 · GMM 0.20 |
+| High-risk churn flagged | 31.4% of customer base (1,842 customers) |
+| Unit tests | 64 passing |
+
+> Numbers above are from a full run of `python main.py` on the complete dataset. The WTP model's R² is deliberately not listed as a headline result — see *WTP Model* below for why.
 
 ---
 
@@ -86,7 +90,7 @@ python main.py --skip-download --no-plots   # fastest
 ### Data — UCI Online Retail II
 
 Real transactional data from a UK-based gift retailer (2009–2011).  
-1,067,371 raw rows → ~750,000 after cleaning → ~4,300 unique customers.
+1,067,371 raw rows → 776,872 after cleaning → 5,862 unique customers across 41 countries.
 
 **Cleaning steps:**
 - Drop rows with missing `CustomerID` (can't segment without an ID)
@@ -118,12 +122,12 @@ Three algorithms compared on the same feature matrix:
 
 | Model | Silhouette | Notes |
 |---|---|---|
-| KMeans (k=4) | 0.61 | Fast baseline; sensitive to outliers |
-| DBSCAN (ε=0.5) | 0.54 | Finds outliers; over-segments |
-| **GMM (k=4)** | **0.68** | **Selected** — best BIC, soft probabilities |
+| KMeans (k=4) | 0.43 | Fast baseline; sensitive to outliers |
+| DBSCAN (ε=0.5) | 0.59 | Only 2 clusters + 5.1% noise — too coarse to segment on |
+| **GMM (k=4)** | **0.20** | **Selected** — soft probabilities feed the WTP model |
 
-**Why GMM?**  
-Soft probabilities let each customer carry uncertainty (e.g. 70% Champion, 30% At-Risk). These probabilities become features in the WTP model.
+**Why GMM despite the lowest silhouette?**  
+RFM features are heavily skewed, so the clusters overlap and hard-assignment silhouette penalises GMM. GMM was chosen for its soft probabilities, not its separation. Known limitation: with k=4 the *At Risk* segment holds only 3 customers, so in practice this is closer to a 3-segment solution. Soft probabilities let each customer carry uncertainty (e.g. 70% Champion, 30% At-Risk). These probabilities become features in the WTP model.
 
 ### Segments
 
@@ -155,7 +159,9 @@ recency_weight = 1 / (1 + recency_days/30)
 
 A **Gradient Boosting Regressor** (400 trees, lr=0.05, depth=4) predicts this proxy from RFM + behavioral + GMM soft-probability features.  
 
-**SHAP explainability** reveals which features drive predictions — top driver is `avg_order_value` (SHAP=0.34), followed by `frequency` and GMM membership probabilities.
+**SHAP explainability** reveals which features drive predictions — top drivers are `monetary`, `recency_days` and `avg_order_value` (mean |SHAP| 153, 130 and 52).
+
+**Caveat — no headline R².** The proxy target is computed from `avg_order_value`, `frequency` and `recency_days`, which are also model inputs, so the model largely re-learns the formula (test R² ≈ 0.98). That score shows the pipeline works, not that WTP is predictable; validating against real price-response data (e.g. a Van Westendorp survey) is the next step.
 
 ### Pricing Strategy
 
@@ -190,7 +196,7 @@ Four tiers anchored to segment WTP distributions:
 ## Tests
 
 ```bash
-pytest tests/ -v           # all 53 tests
+pytest tests/ -v           # all 64 tests
 pytest tests/ -q           # quiet summary
 pytest tests/ --cov=src    # with coverage
 ```

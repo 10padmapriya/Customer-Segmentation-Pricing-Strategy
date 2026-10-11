@@ -154,9 +154,10 @@ The proxy captures the same logic:
 - Provides per-customer, per-feature attributions
 - Satisfies the "which features matter?" question for any stakeholder
 - Passes the test of reproducibility — same model = same SHAP values
-- Interview answer: "The top driver of WTP is avg_order_value
-  (SHAP=0.34), meaning customers who spend more per visit predict
-  higher willingness to pay — as expected."
+- Interview answer: "The top drivers of WTP are monetary, recency_days
+  and avg_order_value. Because the proxy target is built from some of
+  those same features, I treat SHAP here as a sanity check that the
+  model learned the intended relationships, not as a discovery."
 
 ---
 

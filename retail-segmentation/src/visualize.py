@@ -265,7 +265,7 @@ def plot_churn_distribution(
     bp    = axes[1].boxplot(
         data,
         patch_artist=True,
-        labels=[s.replace(" ", "\n") for s in order],
+        tick_labels=[s.replace(" ", "\n") for s in order],
         medianprops=dict(color="#ffffff", lw=2),
         whiskerprops=dict(color=MUTED),
         capprops=dict(color=MUTED),
